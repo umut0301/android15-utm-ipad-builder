@@ -97,8 +97,14 @@ clean_old_build() {
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         log_info "清理编译产物..."
         cd "$WORK_DIR"
-        make clean
-        log_success "清理完成"
+        # Android 编译系统不支持 'make clean'
+        # 正确做法是删除 out 目录
+        if [[ -d "$WORK_DIR/out" ]]; then
+            rm -rf "$WORK_DIR/out"
+            log_success "清理完成"
+        else
+            log_info "没有找到编译产物，跳过清理"
+        fi
     else
         log_info "跳过清理，将进行增量编译"
     fi
