@@ -163,13 +163,15 @@ install_python() {
 
 # 安装 Java
 install_java() {
-    log_info "安装 OpenJDK 11..."
+    log_info "安装 OpenJDK..."
     
-    apt install -y openjdk-11-jdk > /dev/null 2>&1
+    # Debian 12 默认使用 OpenJDK 17
+    # Android 15 支持 JDK 11-17
+    apt install -y openjdk-17-jdk > /dev/null 2>&1
     
     # 设置默认 Java 版本（允许失败）
-    update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java > /dev/null 2>&1 || true
-    update-alternatives --set javac /usr/lib/jvm/java-11-openjdk-amd64/bin/javac > /dev/null 2>&1 || true
+    update-alternatives --set java /usr/lib/jvm/java-17-openjdk-amd64/bin/java > /dev/null 2>&1 || true
+    update-alternatives --set javac /usr/lib/jvm/java-17-openjdk-amd64/bin/javac > /dev/null 2>&1 || true
     
     # 验证 Java 安装
     if ! command -v java &> /dev/null; then
@@ -378,7 +380,7 @@ show_summary() {
     echo "已安装的组件:"
     echo "  ✓ 基础编译工具 (GCC, Make, etc.)"
     echo "  ✓ Python 3"
-    echo "  ✓ OpenJDK 11"
+    echo "  ✓ OpenJDK 17"
     echo "  ✓ Git + Git LFS"
     echo "  ✓ repo 工具"
     echo "  ✓ ccache (50GB)"
