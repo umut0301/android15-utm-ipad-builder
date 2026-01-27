@@ -167,9 +167,15 @@ install_java() {
     
     apt install -y openjdk-11-jdk > /dev/null 2>&1
     
-    # 设置默认 Java 版本
-    update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java > /dev/null 2>&1
-    update-alternatives --set javac /usr/lib/jvm/java-11-openjdk-amd64/bin/javac > /dev/null 2>&1
+    # 设置默认 Java 版本（允许失败）
+    update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java > /dev/null 2>&1 || true
+    update-alternatives --set javac /usr/lib/jvm/java-11-openjdk-amd64/bin/javac > /dev/null 2>&1 || true
+    
+    # 验证 Java 安装
+    if ! command -v java &> /dev/null; then
+        log_error "Java 安装失败"
+        exit 1
+    fi
     
     JAVA_VERSION=$(java -version 2>&1 | head -n 1 | cut -d'"' -f2)
     log_success "Java 安装完成: $JAVA_VERSION"
@@ -179,11 +185,21 @@ install_java() {
 install_git_lfs() {
     log_info "安装 Git LFS..."
     
-    curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash > /dev/null 2>&1
-    apt install -y git-lfs > /dev/null 2>&1
-    git lfs install > /dev/null 2>&1
+    # 安装 Git LFS 仓库（允许失败）
+    curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash > /dev/null 2>&1 || true
     
-    log_success "Git LFS 安装完成"
+    # 安装 Git LFS
+    apt install -y git-lfs > /dev/null 2>&1
+    
+    # 初始化 Git LFS（允许失败）
+    git lfs install > /dev/null 2>&1 || true
+    
+    # 验证安装
+    if ! command -v git-lfs &> /dev/null; then
+        log_warning "Git LFS 安装失败，但不是必须的"
+    else
+        log_success "Git LFS 安装完成"
+    fi
 }
 
 # 安装 repo 工具
@@ -240,11 +256,11 @@ configure_ccache() {
     REAL_USER=${SUDO_USER:-$USER}
     REAL_HOME=$(eval echo ~$REAL_USER)
     
-    # 设置 ccache 大小为 50GB
-    sudo -u $REAL_USER ccache -M 50G > /dev/null 2>&1
+    # 设置 ccache 大小为 50GB（允许失败）
+    sudo -u $REAL_USER ccache -M 50G > /dev/null 2>&1 || true
     
-    # 启用压缩
-    sudo -u $REAL_USER ccache -o compression=true > /dev/null 2>&1
+    # 启用压缩（允许失败）
+    sudo -u $REAL_USER ccache -o compression=true > /dev/null 2>&1 || true
     
     # 添加环境变量到 .bashrc
     if ! grep -q "USE_CCACHE" $REAL_HOME/.bashrc; then
