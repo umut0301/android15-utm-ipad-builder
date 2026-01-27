@@ -69,7 +69,7 @@ check_disk_space() {
     log_info "检查磁盘空间..."
     
     AVAILABLE_SPACE=$(df -BG / | awk 'NR==2 {print $4}' | sed 's/G//')
-    REQUIRED_SPACE=300
+    REQUIRED_SPACE=200  # 降低从 300GB，实际 200GB 就足够
     
     if [[ $AVAILABLE_SPACE -lt $REQUIRED_SPACE ]]; then
         log_error "磁盘空间不足！"

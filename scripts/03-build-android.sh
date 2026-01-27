@@ -135,8 +135,8 @@ select_build_target() {
     
     # 显示可用目标
     log_info "可用的编译目标:"
-    echo "  1. virtio_arm64-user (推荐，体积小)"
-    echo "  2. virtio_arm64-userdebug (调试版本，体积大)"
+    echo "  1. virtio_arm64-ap3a-user (推荐，体积小)"
+    echo "  2. virtio_arm64-ap3a-userdebug (调试版本，体积大)"
     echo ""
     
     read -p "请选择 (1/2) [默认: 1]: " -n 1 -r
@@ -144,14 +144,16 @@ select_build_target() {
     
     if [[ $REPLY == "2" ]]; then
         BUILD_VARIANT="userdebug"
-        log_info "选择: virtio_arm64-userdebug"
+        log_info "选择: virtio_arm64-ap3a-userdebug"
     else
         BUILD_VARIANT="user"
-        log_info "选择: virtio_arm64-user"
+        log_info "选择: virtio_arm64-ap3a-user"
     fi
     
     # 执行 lunch
-    lunch "${BUILD_TARGET}-${BUILD_VARIANT}"
+    # Android 15 要求格式: <product>-<release>-<variant>
+    # LineageOS 23.0 的 release 是 "ap3a"
+    lunch "${BUILD_TARGET}-ap3a-${BUILD_VARIANT}"
     
     log_success "编译目标设置完成"
 }
