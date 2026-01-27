@@ -6,8 +6,6 @@
 # 包括: 环境准备 → 源代码同步 → 编译 → 优化 → 传输
 ################################################################################
 
-set -e
-
 # 颜色定义
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -144,8 +142,17 @@ execute_step() {
     if [[ "$SCRIPT_NAME" == "01-setup-build-env.sh" ]]; then
         # 需要 sudo 权限
         sudo bash "$SCRIPT_DIR/$SCRIPT_NAME" | tee -a "$MASTER_LOG"
+        SCRIPT_EXIT_CODE=${PIPESTATUS[0]}
     else
         bash "$SCRIPT_DIR/$SCRIPT_NAME" | tee -a "$MASTER_LOG"
+        SCRIPT_EXIT_CODE=${PIPESTATUS[0]}
+    fi
+    
+    # 检查脚本退出状态
+    if [[ $SCRIPT_EXIT_CODE -ne 0 ]]; then
+        log_error "步骤 $STEP_NUM 失败 (退出码: $SCRIPT_EXIT_CODE)"
+        log_error "查看日志: $MASTER_LOG"
+        exit 1
     fi
     
     # 计算耗时
@@ -213,16 +220,7 @@ show_final_summary() {
     echo "========================================"
 }
 
-# 错误处理
-handle_error() {
-    log_error "脚本执行失败！"
-    log_error "错误发生在: $1"
-    log_error "查看日志: $MASTER_LOG"
-    exit 1
-}
-
-# 设置错误陷阱
-trap 'handle_error "第 $LINENO 行"' ERR
+# 错误处理由 execute_step 函数处理
 
 # 主函数
 main() {
