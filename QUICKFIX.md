@@ -1,8 +1,14 @@
-# ⚡ 快速修复指南
+# ⚡ 快速修复指南 v1.2.1
 
 ## 🚨 如果您遇到编译错误
 
 ### 错误信息
+```
+FAILED: ninja: unknown target 'lineage-install'
+```
+
+或
+
 ```
 error: Cannot locate config makefile for product "virtio_arm64"
 ```
@@ -20,7 +26,7 @@ bash scripts/03-build-android.sh
 
 ---
 
-## ✅ 修复内容
+## ✅ 修复内容 (v1.2.1)
 
 ### 主要变更
 
@@ -33,14 +39,22 @@ bash scripts/03-build-android.sh
    breakfast virtio_arm64
    ```
 
-2. **使用 `m lineage-install` 代替 `m -j`**
+2. **使用 `m vm-utm-zip` 代替 `m lineage-install`**
    ```bash
    # 旧方式 ❌
-   m -j$(nproc)
+   m lineage-install
    
    # 新方式 ✅
-   m lineage-install
+   m vm-utm-zip
    ```
+
+3. **修复错误检测逻辑**
+   - 现在能正确检测编译失败
+   - 使用 `PIPESTATUS` 捕获真实的退出码
+
+4. **修复产物验证逻辑**
+   - 检查 `UTM-VM-lineage-*.zip` 文件
+   - 而不是 `system.img` 等传统镜像
 
 ---
 
@@ -57,7 +71,7 @@ source build/envsetup.sh
 breakfast virtio_arm64
 
 # 4. 开始编译
-m lineage-install
+m vm-utm-zip
 ```
 
 ---
@@ -72,7 +86,7 @@ m lineage-install
 
 镜像文件位于：
 ```
-~/android/lineage/out/target/product/virtio_arm64/lineage-23.0-YYYYMMDD-UNOFFICIAL-virtio_arm64.img
+~/android/lineage/out/target/product/virtio_arm64/UTM/UTM-VM-lineage-23.0-YYYYMMDD-UNOFFICIAL-virtio_arm64.zip
 ```
 
 ---
@@ -85,5 +99,6 @@ m lineage-install
 
 ---
 
-**版本**: v1.2.0  
-**日期**: 2026-01-27
+**版本**: v1.2.1  
+**日期**: 2026-01-27  
+**修复**: 正确的编译命令和错误检测

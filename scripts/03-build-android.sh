@@ -19,7 +19,7 @@ WORK_DIR="$HOME/android/lineage"
 BUILD_TARGET="virtio_arm64"
 BUILD_VARIANT="user"
 LOG_FILE="$HOME/android/build_$(date +%Y%m%d_%H%M%S).log"
-BUILD_TYPE="lineage-install"  # 或 isolineage-install
+BUILD_TYPE="vm-utm-zip"  # UTM 虚拟机包
 
 # 日志函数
 log_info() {
@@ -205,20 +205,24 @@ start_build() {
     START_TIME=$(date +%s)
     
     # 开始编译
-    # 使用 m lineage-install 而不是 m -j
     log_info "执行: m ${BUILD_TYPE}"
     
-    if m "${BUILD_TYPE}" 2>&1 | tee -a "$LOG_FILE"; then
-        # 计算耗时
-        END_TIME=$(date +%s)
-        ELAPSED=$((END_TIME - START_TIME))
-        HOURS=$((ELAPSED / 3600))
-        MINUTES=$(((ELAPSED % 3600) / 60))
-        
+    # 使用 PIPESTATUS 捕获真实的退出码
+    m "${BUILD_TYPE}" 2>&1 | tee -a "$LOG_FILE"
+    BUILD_EXIT_CODE=${PIPESTATUS[0]}
+    
+    # 计算耗时
+    END_TIME=$(date +%s)
+    ELAPSED=$((END_TIME - START_TIME))
+    HOURS=$((ELAPSED / 3600))
+    MINUTES=$(((ELAPSED % 3600) / 60))
+    
+    if [[ $BUILD_EXIT_CODE -eq 0 ]]; then
         log_success "编译完成！"
         log_info "耗时: ${HOURS}小时 ${MINUTES}分钟"
     else
-        log_error "编译失败！"
+        log_error "编译失败！（退出码: $BUILD_EXIT_CODE）"
+        log_error "耗时: ${HOURS}小时 ${MINUTES}分钟"
         log_error "请查看日志: $LOG_FILE"
         exit 1
     fi
@@ -232,18 +236,21 @@ verify_build() {
     
     OUTPUT_DIR="out/target/product/${BUILD_TARGET}"
     
-    # 检查关键文件
-    # LineageOS virtio 目标会生成 lineage-*.img 或 lineage-*.iso 文件
+    # 检查 UTM 虚拟机包
+    UTM_ZIP=$(find "$OUTPUT_DIR" -name "UTM-VM-lineage-*.zip" | head -n 1)
+    
+    if [[ -n "$UTM_ZIP" ]]; then
+        log_success "找到 UTM 虚拟机包: $(basename "$UTM_ZIP")"
+        FILE_SIZE=$(du -h "$UTM_ZIP" | cut -f1)
+        log_success "文件大小: $FILE_SIZE"
+        log_success "编译产物验证通过"
+        return 0
+    fi
+    
+    # 如果没有找到 UTM 包，检查 LineageOS 镜像文件
     LINEAGE_IMG=$(find "$OUTPUT_DIR" -name "lineage-*.img" -o -name "lineage-*.iso" | head -n 1)
     
-    if [[ -z "$LINEAGE_IMG" ]]; then
-        # 如果没有找到 lineage 镜像，检查传统的镜像文件
-        CRITICAL_FILES=(
-            "system.img"
-            "vendor.img"
-            "boot.img"
-        )
-    else
+    if [[ -n "$LINEAGE_IMG" ]]; then
         log_success "找到 LineageOS 镜像: $(basename "$LINEAGE_IMG")"
         FILE_SIZE=$(du -h "$LINEAGE_IMG" | cut -f1)
         log_success "文件大小: $FILE_SIZE"
@@ -251,23 +258,11 @@ verify_build() {
         return 0
     fi
     
-    ERRORS=0
-    for file in "${CRITICAL_FILES[@]}"; do
-        if [[ ! -f "$OUTPUT_DIR/$file" ]]; then
-            log_error "缺少关键文件: $file"
-            ERRORS=$((ERRORS + 1))
-        else
-            FILE_SIZE=$(du -h "$OUTPUT_DIR/$file" | cut -f1)
-            log_success "$file ($FILE_SIZE)"
-        fi
-    done
-    
-    if [[ $ERRORS -gt 0 ]]; then
-        log_error "编译产物验证失败，发现 $ERRORS 个错误"
-        exit 1
-    fi
-    
-    log_success "编译产物验证通过"
+    # 如果都没有找到，说明编译失败
+    log_error "未找到编译产物"
+    log_error "预期文件: UTM-VM-lineage-*.zip 或 lineage-*.img"
+    log_error "请检查编译日志: $LOG_FILE"
+    exit 1
 }
 
 # 显示编译产物信息
