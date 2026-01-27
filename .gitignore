@@ -1,0 +1,65 @@
+# 编译产物
+*.img
+*.iso
+*.qcow2
+*.raw
+*.vmdk
+*.zip
+*.tar.gz
+*.tar.bz2
+
+# 编译日志
+*.log
+build.log
+build_*.log
+error.log
+
+# 临时文件
+*.tmp
+*.temp
+*.bak
+*~
+.DS_Store
+Thumbs.db
+
+# 编译缓存
+.ccache/
+*.o
+*.a
+*.so
+
+# IDE 文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-*
+
+# 系统文件
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# 环境文件
+.env
+.env.local
+.env.*.local
+
+# 项目特定
+out/
+.repo/
+android/
+lineage/
+
+# 日志文件
+logs/
+*.log
+
+# 配置备份
+*.config.bak
+*.conf.bak
+
+# 大文件
+*.img.bak
+*.zip.bak
