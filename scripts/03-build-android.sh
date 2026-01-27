@@ -19,6 +19,7 @@ WORK_DIR="$HOME/android/lineage"
 BUILD_TARGET="virtio_arm64"
 BUILD_VARIANT="user"
 LOG_FILE="$HOME/android/build_$(date +%Y%m%d_%H%M%S).log"
+BUILD_TYPE="lineage-install"  # 或 isolineage-install
 
 # 日志函数
 log_info() {
@@ -135,8 +136,8 @@ select_build_target() {
     
     # 显示可用目标
     log_info "可用的编译目标:"
-    echo "  1. virtio_arm64-ap3a-user (推荐，体积小)"
-    echo "  2. virtio_arm64-ap3a-userdebug (调试版本，体积大)"
+    echo "  1. virtio_arm64-user (推荐，体积小)"
+    echo "  2. virtio_arm64-userdebug (调试版本，体积大)"
     echo ""
     
     read -p "请选择 (1/2) [默认: 1]: " -n 1 -r
@@ -144,16 +145,23 @@ select_build_target() {
     
     if [[ $REPLY == "2" ]]; then
         BUILD_VARIANT="userdebug"
-        log_info "选择: virtio_arm64-ap3a-userdebug"
+        log_info "选择: virtio_arm64-userdebug"
     else
         BUILD_VARIANT="user"
-        log_info "选择: virtio_arm64-ap3a-user"
+        log_info "选择: virtio_arm64-user"
     fi
     
-    # 执行 lunch
-    # Android 15 要求格式: <product>-<release>-<variant>
-    # LineageOS 23.0 的 release 是 "ap3a"
-    lunch "${BUILD_TARGET}-ap3a-${BUILD_VARIANT}"
+    # 使用 breakfast 命令（推荐）
+    # breakfast 会自动处理设备配置和依赖
+    log_info "执行: breakfast ${BUILD_TARGET}"
+    breakfast "${BUILD_TARGET}"
+    
+    # breakfast 会自动调用 lunch，但我们需要选择 variant
+    # 如果 breakfast 没有自动选择正确的 variant，手动执行 lunch
+    if [[ "${BUILD_VARIANT}" == "userdebug" ]]; then
+        log_info "切换到 userdebug 版本"
+        lunch "lineage_${BUILD_TARGET}-${BUILD_VARIANT}" || true
+    fi
     
     log_success "编译目标设置完成"
 }
@@ -197,9 +205,10 @@ start_build() {
     START_TIME=$(date +%s)
     
     # 开始编译
-    log_info "执行: m -j$JOBS"
+    # 使用 m lineage-install 而不是 m -j
+    log_info "执行: m ${BUILD_TYPE}"
     
-    if m -j$JOBS 2>&1 | tee -a "$LOG_FILE"; then
+    if m "${BUILD_TYPE}" 2>&1 | tee -a "$LOG_FILE"; then
         # 计算耗时
         END_TIME=$(date +%s)
         ELAPSED=$((END_TIME - START_TIME))
@@ -224,12 +233,23 @@ verify_build() {
     OUTPUT_DIR="out/target/product/${BUILD_TARGET}"
     
     # 检查关键文件
-    CRITICAL_FILES=(
-        "system.img"
-        "vendor.img"
-        "boot.img"
-        "ramdisk.img"
-    )
+    # LineageOS virtio 目标会生成 lineage-*.img 或 lineage-*.iso 文件
+    LINEAGE_IMG=$(find "$OUTPUT_DIR" -name "lineage-*.img" -o -name "lineage-*.iso" | head -n 1)
+    
+    if [[ -z "$LINEAGE_IMG" ]]; then
+        # 如果没有找到 lineage 镜像，检查传统的镜像文件
+        CRITICAL_FILES=(
+            "system.img"
+            "vendor.img"
+            "boot.img"
+        )
+    else
+        log_success "找到 LineageOS 镜像: $(basename "$LINEAGE_IMG")"
+        FILE_SIZE=$(du -h "$LINEAGE_IMG" | cut -f1)
+        log_success "文件大小: $FILE_SIZE"
+        log_success "编译产物验证通过"
+        return 0
+    fi
     
     ERRORS=0
     for file in "${CRITICAL_FILES[@]}"; do
@@ -261,6 +281,9 @@ show_build_info() {
     # 统计总大小
     TOTAL_SIZE=$(du -sh "$OUTPUT_DIR" | cut -f1)
     
+    # 查找 LineageOS 镜像文件
+    LINEAGE_IMG=$(find "$OUTPUT_DIR" -name "lineage-*.img" -o -name "lineage-*.iso" | head -n 1)
+    
     # 查找 UTM 虚拟机包
     UTM_PACKAGE=$(find "$OUTPUT_DIR" -name "VirtuaMachine-utm-*.zip" | head -n 1)
     
@@ -271,6 +294,14 @@ show_build_info() {
     echo "  输出目录: $OUTPUT_DIR"
     echo "  总大小: $TOTAL_SIZE"
     echo ""
+    
+    if [[ -n "$LINEAGE_IMG" ]]; then
+        LINEAGE_SIZE=$(du -h "$LINEAGE_IMG" | cut -f1)
+        echo "  LineageOS 镜像文件:"
+        echo "    $(basename "$LINEAGE_IMG")"
+        echo "    大小: $LINEAGE_SIZE"
+        echo ""
+    fi
     
     if [[ -n "$UTM_PACKAGE" ]]; then
         UTM_SIZE=$(du -h "$UTM_PACKAGE" | cut -f1)
