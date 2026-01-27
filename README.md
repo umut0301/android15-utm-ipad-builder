@@ -31,21 +31,36 @@
 - **存储空间**: 至少 300GB（编译所需）
 - **内存**: 至少 16GB（推荐 32GB）
 
-### 一键开始
+### 一键式自动化编译
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/yourusername/android15-utm-build.git
-cd android15-utm-build
+git clone https://github.com/umut0301/android15-utm-ipad-builder.git
+cd android15-utm-ipad-builder
 
-# 2. 查看使用指南
-cat docs/QUICKSTART.md
+# 2. 一键运行（完全自动化）
+sudo bash scripts/00-auto-build-all.sh
+```
 
-# 3. 运行初始化脚本
-bash scripts/01-setup-build-env.sh
+**就这么简单！** 脚本会自动完成从环境准备到编译完成的所有步骤。
 
-# 4. 开始编译
-bash scripts/02-build-android.sh
+### 分步执行（可选）
+
+```bash
+# 步骤 1: 环境准备
+sudo bash scripts/01-setup-build-env.sh
+
+# 步骤 2: 源代码同步
+bash scripts/02-sync-source.sh
+
+# 步骤 3: 编译
+bash scripts/03-build-android.sh
+
+# 步骤 4: 优化
+bash scripts/04-optimize-output.sh
+
+# 步骤 5: 传输
+bash scripts/05-transfer-to-ipad.sh
 ```
 
 ## 📁 项目结构
@@ -97,58 +112,22 @@ android15-utm-build/
 | [IMPORT_GUIDE.md](docs/IMPORT_GUIDE.md) | 虚拟机导入和配置 |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | 故障排查和解决方案 |
 | [FAQ.md](docs/FAQ.md) | 常见问题解答 |
+| [SCRIPTS_USAGE.md](docs/SCRIPTS_USAGE.md) | 自动化脚本使用指南 |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | 系统架构和思维逻辑 |
 | [DEVELOPMENT_LOG.md](DEVELOPMENT_LOG.md) | 开发日志和研究记录 |
 
-## 🛠️ 脚本说明
+## 🛠️ 自动化脚本
 
-### 环境设置
+| 脚本 | 功能 | 预计时间 | 需要 sudo |
+|------|------|---------|----------|
+| `00-auto-build-all.sh` | 一键式全自动编译 | 4-15 小时 | ✓ |
+| `01-setup-build-env.sh` | 环境准备和依赖安装 | 10-20 分钟 | ✓ |
+| `02-sync-source.sh` | 同步 LineageOS 源代码 | 2-8 小时 | ✗ |
+| `03-build-android.sh` | 编译 Android 15 | 1-6 小时 | ✗ |
+| `04-optimize-output.sh` | 优化编译产物 | 10-20 分钟 | ✗ |
+| `05-transfer-to-ipad.sh` | 传输文件到 iPad | 按需 | ✗ |
 
-```bash
-# 一键安装所有依赖
-bash scripts/01-setup-build-env.sh
-```
-
-### 编译 Android
-
-```bash
-# 交互式编译脚本
-bash scripts/02-build-android.sh
-
-# 或直接使用命令
-cd ~/android/lineage
-source build/envsetup.sh
-lunch virtio_arm64-user
-m -j$(nproc)
-```
-
-### 产物优化
-
-```bash
-# 自动优化编译产物
-bash scripts/03-optimize-output.sh
-```
-
-### 文件传输
-
-```bash
-# 启动 HTTP 服务器或复制到共享文件夹
-bash scripts/04-transfer-to-ipad.sh
-```
-
-### 存储管理
-
-```bash
-# 管理虚拟机磁盘
-bash scripts/05-manage-storage.sh
-```
-
-### 性能测试
-
-```bash
-# 测试虚拟机性能
-bash scripts/06-benchmark-vm.sh
-```
+详细使用方法请参考 [**脚本使用指南**](docs/SCRIPTS_USAGE.md)。
 
 ## 🎯 核心工作流程
 
