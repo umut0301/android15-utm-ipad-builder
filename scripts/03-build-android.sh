@@ -20,7 +20,6 @@ BUILD_TARGET="virtio_arm64"
 BUILD_VARIANT="user"
 LOG_FILE="$HOME/android/build_$(date +%Y%m%d_%H%M%S).log"
 BUILD_TYPE="vm-utm-zip"  # UTM 虚拟机包
-STORAGE_CONFIG_FILE="$HOME/.android_storage_config"
 
 # 日志函数
 log_info() {
@@ -355,24 +354,10 @@ main() {
     touch "$LOG_FILE"
     log_info "编译日志: $LOG_FILE"
     
-    # 检查存储配置
-    if [[ -f "$STORAGE_CONFIG_FILE" ]]; then
-        source "$STORAGE_CONFIG_FILE"
-        log_info "检测到存储配置: ${STORAGE_SIZE}GB"
-        echo ""
-    else
-        log_warning "未找到存储配置，将使用默认设置"
-        log_info "建议运行: bash scripts/configure-storage.sh"
-        echo ""
-        echo -n "是否继续使用默认设置? (y/N): "
-        read -r continue_default
-        
-        if [[ ! "$continue_default" =~ ^[Yy]$ ]]; then
-            log_info "请先运行存储配置脚本"
-            exit 0
-        fi
-        echo ""
-    fi
+    # 存储空间说明
+    log_info "LineageOS 使用动态分区，会自动使用 UTM 虚拟磁盘的所有可用空间"
+    log_info "您可以运行 'bash scripts/configure-storage.sh' 生成 UTM 配置指南"
+    echo ""
     
     check_source
     check_disk_space
