@@ -286,6 +286,7 @@ update_config_plist() {
     fi
     
     log_info "更新 UTM 配置文件..."
+    log_info "磁盘文件名: $disk_name"
     
     # 转换为 MiB
     local size_mib=$((target_size_gb * 1024))
@@ -298,24 +299,50 @@ update_config_plist() {
         # XML/plist 格式
         log_info "检测到 XML 格式的配置文件"
         
+        # 先检查配置文件中是否包含该磁盘
+        if grep -q "<string>$disk_name</string>" "$config_file"; then
+            log_info "在配置中找到磁盘: $disk_name"
+        else
+            log_warning "配置中未找到磁盘 $disk_name，将更新所有 SizeMib 条目"
+        fi
+        
         # 使用 xmlstarlet 更新
         if command -v xmlstarlet &> /dev/null; then
-            # 查找包含指定磁盘名称的 Drive 条目并更新 SizeMib
-            xmlstarlet ed -L \
-                -u "//dict[key='ImageName' and string='$disk_name']/key[.='SizeMib']/following-sibling::integer[1]" \
-                -v "$size_mib" \
-                "$config_file" 2>/dev/null || {
-                    log_warning "使用 xmlstarlet 更新失败，尝试使用 sed..."
-                    # 备用方法：使用 sed
-                    sed -i "/<key>SizeMib<\/key>/,/<integer>/ s/<integer>[0-9]*<\/integer>/<integer>$size_mib<\/integer>/" "$config_file"
-                }
+            # 尝试查找并更新包含指定磁盘名称的 Drive 条目
+            local xpath_updated=false
+            
+            # 尝试多种 XPath 表达式
+            for xpath in \
+                "//dict[key='ImageName'][string='$disk_name']/key[.='SizeMib']/following-sibling::integer[1]" \
+                "//array/dict[key='ImageName'][string='$disk_name']//key[.='SizeMib']/following-sibling::integer[1]" \
+                "//key[.='Drive']/following-sibling::array[1]/dict[key='ImageName'][string='$disk_name']//key[.='SizeMib']/following-sibling::integer[1]"
+            do
+                if xmlstarlet ed -L -u "$xpath" -v "$size_mib" "$config_file" 2>/dev/null; then
+                    xpath_updated=true
+                    log_info "使用 XPath 成功更新"
+                    break
+                fi
+            done
+            
+            # 如果所有 XPath 都失败，使用 sed 备用方法
+            if [ "$xpath_updated" = false ]; then
+                log_warning "使用 xmlstarlet 更新失败，尝试使用 sed..."
+                # 更新第一个 SizeMib 条目（通常是 vda 磁盘）
+                sed -i "0,/<key>SizeMib<\/key>/{n;s/<integer>[0-9]*<\/integer>/<integer>$size_mib<\/integer>/;}" "$config_file"
+            fi
         else
             # 使用 sed 作为备用方法
             log_info "使用 sed 更新配置文件..."
-            sed -i "/<key>SizeMib<\/key>/,/<integer>/ s/<integer>[0-9]*<\/integer>/<integer>$size_mib<\/integer>/" "$config_file"
+            # 更新第一个 SizeMib 条目
+            sed -i "0,/<key>SizeMib<\/key>/{n;s/<integer>[0-9]*<\/integer>/<integer>$size_mib<\/integer>/;}" "$config_file"
         fi
         
-        log_success "配置文件已更新: SizeMib = $size_mib MiB (${target_size_gb} GB)"
+        # 验证更新
+        if grep -q "<integer>$size_mib</integer>" "$config_file"; then
+            log_success "配置文件已更新: SizeMib = $size_mib MiB (${target_size_gb} GB)"
+        else
+            log_warning "无法验证配置更新，请手动检查"
+        fi
     else
         log_warning "无法识别配置文件格式，跳过配置更新"
         log_info "您可能需要手动在 UTM 中调整磁盘大小"
@@ -406,22 +433,50 @@ main() {
     
     log_info "UTM 目录: $utm_dir"
     
-    # 查找磁盘镜像
-    local images_dir="$utm_dir/Images"
-    
-    if [ ! -d "$images_dir" ]; then
-        log_error "Images 目录不存在: $images_dir"
+    # 自动检测磁盘目录（支持 Images 和 Data 两种结构）
+    local images_dir=""
+    if [ -d "$utm_dir/Images" ]; then
+        images_dir="$utm_dir/Images"
+        log_info "检测到 Images 目录结构"
+    elif [ -d "$utm_dir/Data" ]; then
+        images_dir="$utm_dir/Data"
+        log_info "检测到 Data 目录结构"
+    else
+        log_error "未找到磁盘目录（Images 或 Data）: $utm_dir"
         exit 1
     fi
     
-    # 查找主磁盘（vda）和数据磁盘（vdb）
-    local disk_vda="$images_dir/disk-vda.img"
-    local disk_vdb="$images_dir/disk-vdb.img"
+    # 自动检测磁盘文件名和格式
+    local disk_vda=""
+    local disk_vdb=""
+    local disk_name_vda=""
+    local disk_name_vdb=""
     
-    if [ ! -f "$disk_vda" ]; then
-        log_error "主磁盘镜像不存在: $disk_vda"
+    # 尝试查找 vda 磁盘（支持多种命名和格式）
+    for name in "disk-vda.img" "vda.qcow2" "vda.img" "disk-vda.qcow2"; do
+        if [ -f "$images_dir/$name" ]; then
+            disk_vda="$images_dir/$name"
+            disk_name_vda="$name"
+            log_info "找到主磁盘: $name"
+            break
+        fi
+    done
+    
+    if [ -z "$disk_vda" ]; then
+        log_error "未找到主磁盘文件（尝试了 disk-vda.img, vda.qcow2, vda.img, disk-vda.qcow2）"
+        log_info "目录内容: $(ls -la $images_dir)"
         exit 1
     fi
+    
+    # 尝试查找 vdb 磁盘（可选）
+    for name in "disk-vdb.img" "vdb.qcow2" "vdb.img" "disk-vdb.qcow2"; do
+        if [ -f "$images_dir/$name" ]; then
+            disk_vdb="$images_dir/$name"
+            disk_name_vdb="$name"
+            log_info "找到数据磁盘: $name"
+            break
+        fi
+    done
     
     # 检测当前大小
     local current_size=$(detect_disk_size "$disk_vda")
@@ -438,7 +493,7 @@ main() {
     
     echo ""
     log_warning "即将执行以下操作："
-    echo "  - 扩展 disk-vda.img 从 ${current_size} GB 到 ${target_size} GB"
+    echo "  - 扩展 $disk_name_vda 从 ${current_size} GB 到 ${target_size} GB"
     echo "  - 扩展 GPT 分区表"
     echo "  - 更新 UTM 配置文件"
     if [ "$is_zip" = true ]; then
@@ -463,7 +518,7 @@ main() {
     expand_partition_table "$disk_vda" "$target_size"
     
     # 更新配置文件
-    update_config_plist "$utm_dir" "disk-vda.img" "$target_size"
+    update_config_plist "$utm_dir" "$disk_name_vda" "$target_size"
     
     # 处理 vdb（如果存在）
     if [ -f "$disk_vdb" ]; then
