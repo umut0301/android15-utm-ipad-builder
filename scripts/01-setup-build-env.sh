@@ -301,6 +301,7 @@ install_mesa_dependencies() {
         meson \
         ninja-build \
         python3-mako \
+        python3-yaml \
         bison \
         flex \
         libwayland-dev \
@@ -319,6 +320,12 @@ install_mesa_dependencies() {
     
     if ! command -v ninja &> /dev/null; then
         log_error "Ninja 安装失败"
+        exit 1
+    fi
+    
+    # 验证 PyYAML 安装
+    if ! python3 -c "import yaml" &> /dev/null; then
+        log_error "PyYAML 安装失败"
         exit 1
     fi
     
