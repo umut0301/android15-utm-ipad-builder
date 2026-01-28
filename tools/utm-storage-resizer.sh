@@ -559,7 +559,7 @@ main() {
     resize_disk_image "$disk_vda" "$target_size"
     
     # 扩展分区表
-    expand_partition_table "$disk_vda" "$target_size"
+    expand_partition "$disk_vda"
     
     # 更新配置文件
     update_config_plist "$utm_dir" "$disk_name_vda" "$target_size"
