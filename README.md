@@ -7,6 +7,19 @@
 ![Android Version](https://img.shields.io/badge/Android-15-green.svg)
 ![Build Status](https://img.shields.io/badge/build-✅%20SUCCESS-brightgreen.svg)
 
+## 🔴 紧急提示 (2026-01-28)
+
+**如果您遇到 Grub 启动循环问题，请立即查看：**
+
+🔧 **[Grub 启动循环修复指南](docs/GRUB_BOOT_LOOP_FIX_GUIDE.md)** - 三步解决启动问题
+💾 **[UTM 存储扩展指南](docs/UTM_STORAGE_EXPANSION_GUIDE.md)** - 正确设置 128GB 存储
+
+**核心问题**：
+- ⚠️ UTM 架构必须设置为 **ARM64 (aarch64)**，不是 x86_64
+- ⚠️ 存储扩展必须在 "编辑" -> "驱动器" 中修改 disk-vda.img
+
+---
+
 ## 🎉 重大里程碑 (v1.4.0 - 2026-01-28)
 
 **✅ 首次编译成功！**
@@ -138,9 +151,11 @@ android15-utm-build/
 
 | 文档 | 说明 |
 |------|------|
+| [🔴 GRUB_BOOT_LOOP_FIX_GUIDE.md](docs/GRUB_BOOT_LOOP_FIX_GUIDE.md) | **紧急！** Grub 启动循环问题修复 |
+| [💾 UTM_STORAGE_EXPANSION_GUIDE.md](docs/UTM_STORAGE_EXPANSION_GUIDE.md) | **紧急！** UTM 存储扩展完整指南 |
 | [🚀 QUICK_START_GUIDE.md](docs/QUICK_START_GUIDE.md) | 30 分钟快速开始指南 |
-| [📱 IPAD_DEPLOYMENT_GUIDE.md](docs/IPAD_DEPLOYMENT_GUIDE.md) | **新！** iPad Pro 部署完整指南 |
-| [🎉 BUILD_SUCCESS_REPORT_20260128.md](docs/BUILD_SUCCESS_REPORT_20260128.md) | **新！** 首次编译成功报告 |
+| [📱 IPAD_DEPLOYMENT_GUIDE.md](docs/IPAD_DEPLOYMENT_GUIDE.md) | iPad Pro 部署完整指南 |
+| [🎉 BUILD_SUCCESS_REPORT_20260128.md](docs/BUILD_SUCCESS_REPORT_20260128.md) | 首次编译成功报告 |
 | [SETUP_GUIDE.md](docs/SETUP_GUIDE.md) | 详细的环境配置步骤 |
 | [BUILD_GUIDE.md](docs/BUILD_GUIDE.md) | 完整的编译流程 |
 | [OPTIMIZATION_GUIDE.md](docs/OPTIMIZATION_GUIDE.md) | 3D 加速和存储优化 |
