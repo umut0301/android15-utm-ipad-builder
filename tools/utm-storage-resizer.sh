@@ -527,13 +527,24 @@ main() {
     
     # 如果是 ZIP，重新打包
     if [ "$is_zip" = true ]; then
-        local output_zip="${utm_package%.zip}-${target_size}GB.zip"
-        repack_zip "$utm_dir" "$output_zip"
+        # 获取原始 ZIP 的绝对路径和目录
+        local original_zip_abs=$(realpath "$utm_package")
+        local original_dir=$(dirname "$original_zip_abs")
+        local original_name=$(basename "$utm_package" .zip)
+        
+        # 在临时目录中创建新 ZIP
+        local temp_output_zip="$temp_dir/${original_name}-${target_size}GB.zip"
+        repack_zip "$utm_dir" "$temp_output_zip"
+        
+        # 将新 ZIP 移动到原始目录
+        local final_output_zip="$original_dir/${original_name}-${target_size}GB.zip"
+        log_info "移动 ZIP 包到原始目录..."
+        mv "$temp_output_zip" "$final_output_zip"
         
         echo ""
         log_success "处理完成！"
-        log_info "新的 ZIP 包: $output_zip"
-        log_info "原始备份: ${disk_vda}.backup"
+        log_info "新的 ZIP 包: $final_output_zip"
+        log_info "原始备份: ${disk_vda}.backup (在临时目录中，将被清理)"
     else
         echo ""
         log_success "处理完成！"
