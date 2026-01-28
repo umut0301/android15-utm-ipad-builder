@@ -7,16 +7,46 @@
 ![Android Version](https://img.shields.io/badge/Android-15-green.svg)
 ![Build Status](https://img.shields.io/badge/build-✅%20SUCCESS-brightgreen.svg)
 
-## 🔴 紧急提示 (2026-01-28)
+## 🆕 新工具发布 (2026-01-28)
 
-**如果您遇到 Grub 启动循环问题，请立即查看：**
+**🔧 UTM 存储自动扩展工具已发布！**
+
+一键式自动修改 UTM 虚拟机包的存储大小，无需手动操作！
+
+**快速使用**：
+```bash
+# 克隆仓库
+git clone https://github.com/umut0301/android15-utm-ipad-builder.git
+cd android15-utm-ipad-builder
+
+# 运行工具（自动识别 UTM 包）
+sudo bash tools/utm-storage-resizer.sh
+```
+
+**功能特性**：
+- ✅ 自动识别 .utm 目录和 .zip 文件
+- ✅ 自动扩展虚拟磁盘 (disk-vda.img)
+- ✅ 自动更新 GPT 分区表
+- ✅ 自动修改 UTM 配置文件
+- ✅ 支持 64GB/128GB/256GB 预设或自定义
+- ✅ 完整的备份和错误处理
+
+**详细文档**：
+- 📚 [UTM 存储扩展工具详细文档](docs/UTM_STORAGE_RESIZER_README.md)
+- 🚀 [5 分钟快速上手指南](docs/QUICK_USAGE_GUIDE.md)
+- 🧪 [本地测试指南](docs/LOCAL_TESTING_GUIDE.md)
+
+---
+
+## 🔴 常见问题 (2026-01-28)
+
+**如果您遇到 Grub 启动循环问题：**
 
 🔧 **[Grub 启动循环修复指南](docs/GRUB_BOOT_LOOP_FIX_GUIDE.md)** - 三步解决启动问题
-💾 **[UTM 存储扩展指南](docs/UTM_STORAGE_EXPANSION_GUIDE.md)** - 正确设置 128GB 存储
 
 **核心问题**：
 - ⚠️ UTM 架构必须设置为 **ARM64 (aarch64)**，不是 x86_64
-- ⚠️ 存储扩展必须在 "编辑" -> "驱动器" 中修改 disk-vda.img
+- ⚠️ 使用新的 **utm-storage-resizer.sh** 工具来自动扩展存储
 
 ---
 
@@ -151,8 +181,12 @@ android15-utm-build/
 
 | 文档 | 说明 |
 |------|------|
-| [🔴 GRUB_BOOT_LOOP_FIX_GUIDE.md](docs/GRUB_BOOT_LOOP_FIX_GUIDE.md) | **紧急！** Grub 启动循环问题修复 |
-| [💾 UTM_STORAGE_EXPANSION_GUIDE.md](docs/UTM_STORAGE_EXPANSION_GUIDE.md) | **紧急！** UTM 存储扩展完整指南 |
+| [🔧 utm-storage-resizer.sh](tools/utm-storage-resizer.sh) | **新工具！** 自动化 UTM 存储扩展脚本 |
+| [📚 UTM_STORAGE_RESIZER_README.md](docs/UTM_STORAGE_RESIZER_README.md) | **必读！** 存储扩展工具详细文档 |
+| [🚀 QUICK_USAGE_GUIDE.md](docs/QUICK_USAGE_GUIDE.md) | 5 分钟快速上手指南 |
+| [🧪 LOCAL_TESTING_GUIDE.md](docs/LOCAL_TESTING_GUIDE.md) | 本地测试完整指南 |
+| [🔴 GRUB_BOOT_LOOP_FIX_GUIDE.md](docs/GRUB_BOOT_LOOP_FIX_GUIDE.md) | Grub 启动循环问题修复 |
+| [💾 UTM_STORAGE_EXPANSION_GUIDE.md](docs/UTM_STORAGE_EXPANSION_GUIDE.md) | UTM 存储扩展完整指南 |
 | [🚀 QUICK_START_GUIDE.md](docs/QUICK_START_GUIDE.md) | 30 分钟快速开始指南 |
 | [📱 IPAD_DEPLOYMENT_GUIDE.md](docs/IPAD_DEPLOYMENT_GUIDE.md) | iPad Pro 部署完整指南 |
 | [🎉 BUILD_SUCCESS_REPORT_20260128.md](docs/BUILD_SUCCESS_REPORT_20260128.md) | 首次编译成功报告 |
