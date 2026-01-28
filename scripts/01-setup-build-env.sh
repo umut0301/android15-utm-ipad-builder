@@ -293,6 +293,38 @@ create_work_directories() {
     log_success "工作目录创建完成: $REAL_HOME/android/lineage"
 }
 
+# 安装 Mesa 3D 编译依赖
+install_mesa_dependencies() {
+    log_info "安装 Mesa 3D 编译依赖..."
+    
+    apt install -y \
+        meson \
+        ninja-build \
+        python3-mako \
+        bison \
+        flex \
+        libwayland-dev \
+        wayland-protocols \
+        libdrm-dev \
+        libexpat1-dev \
+        libelf-dev \
+        zlib1g-dev \
+        > /dev/null 2>&1
+    
+    # 验证 meson 和 ninja 安装
+    if ! command -v meson &> /dev/null; then
+        log_error "Meson 安装失败"
+        exit 1
+    fi
+    
+    if ! command -v ninja &> /dev/null; then
+        log_error "Ninja 安装失败"
+        exit 1
+    fi
+    
+    log_success "Mesa 3D 依赖安装完成"
+}
+
 # 安装额外工具
 install_extra_tools() {
     log_info "安装额外工具..."
@@ -422,6 +454,7 @@ main() {
     install_java
     install_git_lfs
     install_repo
+    install_mesa_dependencies
     configure_git
     configure_ccache
     create_work_directories
