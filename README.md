@@ -184,11 +184,13 @@ android15-utm-build/
 | 文档 | 说明 |
 |---|---|
 | [🔧 utm-storage-resizer.sh](tools/utm-storage-resizer.sh) | **新工具！** 自动化 UTM 存储扩展脚本 |
+| [⚡ first-boot-setup.sh](tools/first-boot-setup.sh) | **新工具！** 首次启动一键配置脚本（ADB 端口 + Termux） |
 | [📚 UTM_STORAGE_RESIZER_README.md](docs/UTM_STORAGE_RESIZER_README.md) | **必读！** 存储扩展工具详细文档 |
 | [🚀 QUICK_USAGE_GUIDE.md](docs/QUICK_USAGE_GUIDE.md) | 5 分钟快速上手指南 |
 | [🧪 LOCAL_TESTING_GUIDE.md](docs/LOCAL_TESTING_GUIDE.md) | 本地测试完整指南 |
 | [🔴 GRUB_BOOT_LOOP_FIX_GUIDE.md](docs/GRUB_BOOT_LOOP_FIX_GUIDE.md) | Grub 启动循环问题修复 |
 | [💾 MANUAL_PARTITION_EXPANSION_GUIDE.md](docs/MANUAL_PARTITION_EXPANSION_GUIDE.md) | **新！** 手动扩展虚拟机磁盘分区的详细步骤 |
+| [⚡ FIRST_BOOT_SETUP_GUIDE.md](docs/FIRST_BOOT_SETUP_GUIDE.md) | **新！** 首次配置脚本使用指南 |
 
 ### 指南和报告
 
