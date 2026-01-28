@@ -225,24 +225,51 @@ resize_disk_image() {
     log_success "磁盘镜像已扩展到 ${target_size_gb} GB"
 }
 
-# 扩展分区表
-expand_partition_table() {
+# 扩展 GPT 分区表
+expand_partition() {
     local disk_image="$1"
-    local target_size_gb="$2"
+    
+    if [ ! -f "$disk_image" ]; then
+        log_warning "磁盘镜像不存在: $disk_image"
+        return
+    fi
     
     log_info "扩展 GPT 分区表..."
     
-    # 使用 parted 修复 GPT（移动备份 GPT 到磁盘末尾）
-    parted -s "$disk_image" print 2>&1 | grep -q "fix the GPT" && {
-        log_info "修复 GPT 分区表..."
-        echo "Fix" | parted ---pretend-input-tty "$disk_image" print
-    }
+    # 检测磁盘格式
+    local disk_format=$(qemu-img info "$disk_image" | grep "file format" | awk '{print $3}')
+    log_info "检测到磁盘格式: $disk_format"
+    
+    local working_disk="$disk_image"
+    local need_convert=false
+    
+    # 如果是 qcow2 格式，需要先转换为 raw
+    if [ "$disk_format" = "qcow2" ]; then
+        log_info "qcow2 格式需要转换为 raw 以进行分区操作..."
+        working_disk="${disk_image}.raw"
+        need_convert=true
+        
+        qemu-img convert -f qcow2 -O raw "$disk_image" "$working_disk"
+        if [ $? -ne 0 ]; then
+            log_error "转换 qcow2 到 raw 失败"
+            return 1
+        fi
+        log_success "已转换为 raw 格式"
+    fi
+    
+    # 检查是否有分区表
+    if ! parted -s "$working_disk" print &> /dev/null; then
+        log_warning "无法读取分区表，跳过分区扩展"
+        [ "$need_convert" = true ] && rm -f "$working_disk"
+        return
+    fi
     
     # 获取最后一个分区的信息
-    local last_partition=$(parted -s "$disk_image" print | grep "^ " | tail -n 1 | awk '{print $1}')
+    local last_partition=$(parted -s "$working_disk" print | grep "^ " | tail -n 1 | awk '{print $1}')
     
     if [ -z "$last_partition" ]; then
         log_warning "无法检测到分区，跳过分区扩展"
+        [ "$need_convert" = true ] && rm -f "$working_disk"
         return
     fi
     
@@ -254,13 +281,13 @@ expand_partition_table() {
     # 使用 sgdisk 扩展分区
     if command -v sgdisk &> /dev/null; then
         # 删除并重新创建最后一个分区，使用所有剩余空间
-        local start_sector=$(sgdisk -i "$last_partition" "$disk_image" | grep "First sector" | awk '{print $3}')
+        local start_sector=$(sgdisk -i "$last_partition" "$working_disk" 2>/dev/null | grep "First sector" | awk '{print $3}')
         
         if [ -n "$start_sector" ]; then
             log_info "重新创建分区 $last_partition，起始扇区: $start_sector"
-            sgdisk -d "$last_partition" "$disk_image"
-            sgdisk -n "${last_partition}:${start_sector}:0" "$disk_image"
-            sgdisk -c "${last_partition}:userdata" "$disk_image"
+            sgdisk -d "$last_partition" "$working_disk" 2>&1 | grep -v "Warning:"
+            sgdisk -n "${last_partition}:${start_sector}:0" "$working_disk" 2>&1 | grep -v "Warning:"
+            sgdisk -c "${last_partition}:userdata" "$working_disk" 2>&1 | grep -v "Warning:"
             
             log_success "分区表已扩展"
         else
@@ -269,6 +296,23 @@ expand_partition_table() {
     else
         log_warning "sgdisk 不可用，跳过分区扩展"
         log_info "Android 系统会在首次启动时自动扩展文件系统"
+    fi
+    
+    # 如果转换了格式，需要转回 qcow2
+    if [ "$need_convert" = true ]; then
+        log_info "转换回 qcow2 格式..."
+        mv "$disk_image" "${disk_image}.backup-qcow2"
+        qemu-img convert -f raw -O qcow2 "$working_disk" "$disk_image"
+        if [ $? -eq 0 ]; then
+            rm -f "$working_disk"
+            rm -f "${disk_image}.backup-qcow2"
+            log_success "已转换回 qcow2 格式"
+        else
+            log_error "转换回 qcow2 失败，恢复原文件"
+            mv "${disk_image}.backup-qcow2" "$disk_image"
+            rm -f "$working_disk"
+            return 1
+        fi
     fi
 }
 

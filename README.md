@@ -179,14 +179,21 @@ android15-utm-build/
 
 ## 📖 文档导航
 
+### 工具和修复
+
 | 文档 | 说明 |
-|------|------|
+|---|---|
 | [🔧 utm-storage-resizer.sh](tools/utm-storage-resizer.sh) | **新工具！** 自动化 UTM 存储扩展脚本 |
 | [📚 UTM_STORAGE_RESIZER_README.md](docs/UTM_STORAGE_RESIZER_README.md) | **必读！** 存储扩展工具详细文档 |
 | [🚀 QUICK_USAGE_GUIDE.md](docs/QUICK_USAGE_GUIDE.md) | 5 分钟快速上手指南 |
 | [🧪 LOCAL_TESTING_GUIDE.md](docs/LOCAL_TESTING_GUIDE.md) | 本地测试完整指南 |
 | [🔴 GRUB_BOOT_LOOP_FIX_GUIDE.md](docs/GRUB_BOOT_LOOP_FIX_GUIDE.md) | Grub 启动循环问题修复 |
-| [💾 UTM_STORAGE_EXPANSION_GUIDE.md](docs/UTM_STORAGE_EXPANSION_GUIDE.md) | UTM 存储扩展完整指南 |
+| [💾 MANUAL_PARTITION_EXPANSION_GUIDE.md](docs/MANUAL_PARTITION_EXPANSION_GUIDE.md) | **新！** 手动扩展虚拟机磁盘分区的详细步骤 |
+
+### 指南和报告
+
+| 文档 | 说明 |
+|---|---|
 | [🚀 QUICK_START_GUIDE.md](docs/QUICK_START_GUIDE.md) | 30 分钟快速开始指南 |
 | [📱 IPAD_DEPLOYMENT_GUIDE.md](docs/IPAD_DEPLOYMENT_GUIDE.md) | iPad Pro 部署完整指南 |
 | [🎉 BUILD_SUCCESS_REPORT_20260128.md](docs/BUILD_SUCCESS_REPORT_20260128.md) | 首次编译成功报告 |
@@ -197,8 +204,14 @@ android15-utm-build/
 | [TROUBLESHOOTING_GUIDE.md](docs/TROUBLESHOOTING_GUIDE.md) | 故障排查和解决方案 |
 | [FAQ.md](docs/FAQ.md) | 常见问题解答 |
 | [SCRIPTS_USAGE.md](docs/SCRIPTS_USAGE.md) | 自动化脚本使用指南 |
+
+### 开发和架构
+
+| 文档 | 说明 |
+|---|---|
 | [ARCHITECTURE.md](ARCHITECTURE.md) | 系统架构和思维逻辑 |
 | [DEVELOPMENT_LOG.md](DEVELOPMENT_LOG.md) | 开发日志和研究记录 |
+| [DEVELOPMENT_LOG_20260128.md](docs/DEVELOPMENT_LOG_20260128.md) | **新！** 记录了修复 GPT 分区扩展问题的完整过程 |
 
 ## 🛠️ 自动化脚本
 
