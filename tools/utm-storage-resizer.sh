@@ -28,7 +28,7 @@ NC='\033[0m' # No Color
 
 # 日志函数
 log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+    echo -e "${BLUE}[INFO]${NC} $1" >&2
 }
 
 log_success() {
@@ -82,24 +82,17 @@ check_dependencies() {
 
 # 查找 UTM 包
 find_utm_packages() {
-    log_info "搜索当前目录中的 UTM 虚拟机包..."
-    
-    local packages=()
+    echo "搜索当前目录中的 UTM 虚拟机包..." >&2
     
     # 查找 .utm 目录
-    while IFS= read -r -d '' utm_dir; do
-        packages+=("$utm_dir")
-    done < <(find . -maxdepth 2 -type d -name "*.utm" -print0 2>/dev/null)
+    find . -maxdepth 2 -type d -name "*.utm" -print0 2>/dev/null
     
-    # 查找 .zip 文件
+    # 查找 .zip 文件并检查是否包含 .utm
     while IFS= read -r -d '' zip_file; do
-        # 检查是否包含 .utm 目录
         if unzip -l "$zip_file" 2>/dev/null | grep -q "\.utm/"; then
-            packages+=("$zip_file")
+            printf '%s\0' "$zip_file"
         fi
     done < <(find . -maxdepth 2 -type f -name "*.zip" -print0 2>/dev/null)
-    
-    echo "${packages[@]}"
 }
 
 # 显示包列表并让用户选择
@@ -107,21 +100,22 @@ select_utm_package() {
     local packages=($@)
     
     if [ ${#packages[@]} -eq 0 ]; then
+        echo "" >&2
         log_error "未找到任何 UTM 虚拟机包"
         log_info "请确保 .utm 目录或 .zip 文件在当前目录或子目录中"
         exit 1
     fi
     
-    echo ""
+    echo "" >&2
     log_info "找到以下 UTM 虚拟机包："
-    echo ""
+    echo "" >&2
     
     for i in "${!packages[@]}"; do
-        echo "  [$((i+1))] ${packages[$i]}"
+        echo "  [$((i+1))] ${packages[$i]}" >&2
     done
     
-    echo ""
-    read -p "请选择要修改的包 [1-${#packages[@]}]: " selection
+    echo "" >&2
+    read -p "请选择要修改的包 [1-${#packages[@]}]: " selection >&2
     
     if [[ ! "$selection" =~ ^[0-9]+$ ]] || [ "$selection" -lt 1 ] || [ "$selection" -gt ${#packages[@]} ]; then
         log_error "无效的选择"
@@ -133,15 +127,15 @@ select_utm_package() {
 
 # 选择目标大小
 select_target_size() {
-    echo ""
+    echo "" >&2
     log_info "选择目标存储大小："
-    echo ""
-    echo "  [1] 64 GB  - 轻度使用"
-    echo "  [2] 128 GB - 推荐（日常使用）"
-    echo "  [3] 256 GB - 重度使用"
-    echo "  [4] 自定义大小"
-    echo ""
-    read -p "请选择 [1-4, 默认=2]: " size_choice
+    echo "" >&2
+    echo "  [1] 64 GB  - 轻度使用" >&2
+    echo "  [2] 128 GB - 推荐（日常使用）" >&2
+    echo "  [3] 256 GB - 重度使用" >&2
+    echo "  [4] 自定义大小" >&2
+    echo "" >&2
+    read -p "请选择 [1-4, 默认=2]: " size_choice >&2
     
     case "${size_choice:-2}" in
         1)
@@ -154,7 +148,7 @@ select_target_size() {
             echo "256"
             ;;
         4)
-            read -p "请输入自定义大小 (GB): " custom_size
+            read -p "请输入自定义大小 (GB): " custom_size >&2
             if [[ ! "$custom_size" =~ ^[0-9]+$ ]] || [ "$custom_size" -lt 16 ]; then
                 log_error "无效的大小，必须至少为 16 GB"
                 exit 1
@@ -375,7 +369,10 @@ main() {
     
     # 如果没有提供参数，自动搜索并让用户选择
     if [ -z "$utm_package" ]; then
-        local packages=($(find_utm_packages))
+        local packages=()
+        while IFS= read -r -d '' pkg; do
+            packages+=("$pkg")
+        done < <(find_utm_packages)
         utm_package=$(select_utm_package "${packages[@]}")
     fi
     
