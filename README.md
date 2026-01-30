@@ -414,6 +414,24 @@ qemu-img convert -O qcow2 -c system.img system-compressed.img
 - 所有贡献者和用户
 
 ---
+sudo steamos-readonly disable
+
+cd ~/
+
+git clone https://github.com/ryanrudolfoba/steamos-waydroid-installer
+
+cd ~/steamos-waydroid-installer
+
+chmod +x steamos-waydroid-installer.sh
+
+./steamos-waydroid-installer.sh
+
+
+---
+
+
+
+
 
 **最后更新**: 2026 年 1 月 28 日  
 **项目版本**: 1.4.0  
